@@ -131,13 +131,23 @@ async function ensureToday(doctor, clinic, patients) {
   return queue
 }
 
-/** Idempotent: creates whatever demo data is missing (users, clinic, history, today's queue). */
-async function ensureDemoData() {
+async function seedDemoData() {
   const { doctor, assistant, clinic } = await ensureUsersAndClinic()
   const patients = await ensurePatients()
   await ensureHistory(doctor, clinic, patients)
   const todayQueue = await ensureToday(doctor, clinic, patients)
   return { doctor, assistant, clinic, todayQueue }
+}
+
+/** Idempotent: creates whatever demo data is missing (users, clinic, history, today's queue). */
+async function ensureDemoData() {
+  try {
+    return await seedDemoData()
+  } catch (error) {
+    // Two visitors seeding at the same moment: the other request created the row, so just re-read
+    if (error.name === 'SequelizeUniqueConstraintError') return seedDemoData()
+    throw error
+  }
 }
 
 /** Wipes today's demo queue so the next ensureDemoData() call starts it fresh. */
