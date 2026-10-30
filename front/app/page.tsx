@@ -4,8 +4,9 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs'
 import { useAuth } from '@/context/AuthContext'
-import { Loader2, Sparkles, Zap, Users, Clock, Shield, ArrowRight, Activity } from 'lucide-react'
+import { Loader2, Sparkles, Zap, Play, Clock, Shield, ArrowRight, Activity } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { motion } from 'framer-motion'
 
 export default function HomePage() {
@@ -169,10 +170,26 @@ export default function HomePage() {
                     <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </SignInButton>
-                <Button variant="outline" size="lg" className="gap-2">
-                  <Users className="h-5 w-5" />
-                  Watch Demo
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="lg" className="gap-2">
+                      <Play className="h-5 w-5" />
+                      Watch Demo
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-5xl p-0 overflow-hidden bg-black border-0 [&>button]:z-10 [&>button]:text-white [&>button]:opacity-90">
+                    <DialogTitle className="sr-only">Cliniq demo video</DialogTitle>
+                    <video
+                      src="/demo/cliniq-demo.mp4"
+                      poster="/demo/cliniq-demo-poster.jpg"
+                      className="w-full aspect-video"
+                      controls
+                      autoPlay
+                      playsInline
+                      preload="none"
+                    />
+                  </DialogContent>
+                </Dialog>
               </motion.div>
 
               {/* Feature Cards */}
