@@ -10,7 +10,10 @@
       "Bash(npm run dev:*)",
       "Bash(npm start)",
       "Bash(taskkill:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "WebFetch(domain:)",
+      "Bash(python3:*)",
+      "Bash(py:*)"
     ]
   }
 }

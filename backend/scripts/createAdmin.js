@@ -1,6 +1,9 @@
 // Script to create the first admin user
 // Run with: node scripts/createAdmin.js
 
+const path = require('path')
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') })
+
 const { Admin, sequelize } = require('../models')
 
 async function createAdmin() {
@@ -8,11 +11,11 @@ async function createAdmin() {
     await sequelize.authenticate()
     console.log('Connected to database')
 
-    // Default admin credentials - CHANGE THESE IN PRODUCTION
+    // Get admin credentials from environment variables
     const adminData = {
-      email: 'admin@cliniq.com',
-      password: 'admin123', // Will be hashed automatically by the model hook
-      name: 'Super Admin'
+      email: process.env.DEFAULT_ADMIN_EMAIL || 'admin@cliniq.com',
+      password: process.env.DEFAULT_ADMIN_PASSWORD || 'admin123',
+      name: process.env.DEFAULT_ADMIN_NAME || 'Super Admin'
     }
 
     // Check if admin exists
@@ -25,7 +28,7 @@ async function createAdmin() {
       const admin = await Admin.create(adminData)
       console.log('Admin created successfully!')
       console.log('Email:', admin.email)
-      console.log('Password: admin123')
+      console.log('Password:', adminData.password)
       console.log('Admin ID:', admin.id)
     }
 

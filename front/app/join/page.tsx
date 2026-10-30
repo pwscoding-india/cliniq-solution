@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { authApi } from '@/lib/api'
 import { toast } from 'sonner'
-import { Loader2, UserPlus, LogOut } from 'lucide-react'
+import { Loader2, UserPlus, LogOut, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,6 +41,7 @@ export default function JoinPage() {
   }
 
   const isValidIndianMobile = (raw: string) => {
+    if (!raw) return true
     const digits = normalizeIndianMobile(raw)
     return /^[6-9]\d{9}$/.test(digits)
   }
@@ -56,8 +57,8 @@ export default function JoinPage() {
       errors.email = 'Enter a valid email address'
     }
 
-    if (!isValidIndianMobile(formData.phone)) {
-      errors.phone = 'Enter a valid Indian mobile number (10 digits, starts with 6–9)'
+    if (formData.phone && !isValidIndianMobile(formData.phone)) {
+      errors.phone = 'Enter a valid Indian mobile number'
     }
 
     setFormErrors(errors)
@@ -78,7 +79,6 @@ export default function JoinPage() {
   const canSubmit =
     !!formData.name.trim() &&
     isValidEmail(formData.email) &&
-    isValidIndianMobile(formData.phone) &&
     !isSubmitting
 
   useEffect(() => {
@@ -121,7 +121,6 @@ export default function JoinPage() {
       setSubmitted(true)
       toast.success('Registration submitted successfully')
 
-      // Refetch auth to update state
       await refetch()
     } catch (error: unknown) {
       const err = error as { message?: string; code?: string }
@@ -138,18 +137,18 @@ export default function JoinPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 text-center">
-          <div className="w-16 h-16 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
-            <UserPlus className="h-8 w-8 text-green-600" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-lg border p-8 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+            <CheckCircle2 className="h-8 w-8 text-green-600" />
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">
             Registration Submitted
           </h1>
 
           <p className="text-gray-600 mb-6">
-            Your request has been submitted successfully. An administrator will review and approve your account shortly.
+            Your request has been submitted. An administrator will review and approve your account shortly.
           </p>
 
           <div className="space-y-3">
@@ -161,7 +160,7 @@ export default function JoinPage() {
             </Button>
 
             <SignOutButton>
-              <Button variant="ghost" className="w-full text-gray-500">
+              <Button variant="outline" className="w-full">
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
@@ -173,121 +172,157 @@ export default function JoinPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Join Cliniq</h1>
-          <p className="text-gray-600 mt-2">
-            Complete your registration to get started
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="name">Full Name</Label>
-            <Input
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              placeholder="Enter your full name"
-              aria-invalid={!!formErrors.name}
-              aria-describedby={formErrors.name ? 'join-name-error' : undefined}
-              className={cn(formErrors.name && 'border-red-500 focus-visible:ring-red-500')}
-            />
-            {formErrors.name && (
-              <p id="join-name-error" className="text-xs text-red-600 mt-1">
-                {formErrors.name}
-              </p>
-            )}
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <div className="bg-white rounded-lg border shadow-sm p-8">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-semibold text-gray-900">Join Cliniq</h1>
+            <p className="text-gray-600 mt-1">
+              Complete your registration
+            </p>
           </div>
 
-          <div>
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              readOnly
-              aria-invalid={!!formErrors.email}
-              aria-describedby={formErrors.email ? 'join-email-error' : undefined}
+          {/* Role Selection */}
+          <div className="flex gap-2 mb-6">
+            <button
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, role: 'doctor' }))}
               className={cn(
-                'bg-gray-50 cursor-not-allowed',
-                formErrors.email && 'border-red-500 focus-visible:ring-red-500'
+                'flex-1 py-2.5 px-4 rounded-md text-sm font-medium border transition-colors',
+                formData.role === 'doctor'
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
               )}
-            />
-            <p className="text-xs text-gray-500 mt-1">From your Clerk account</p>
-            {formErrors.email && (
-              <p id="join-email-error" className="text-xs text-red-600 mt-1">
-                {formErrors.email}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              placeholder="10-digit Indian mobile (e.g., 9876543210)"
-              inputMode="numeric"
-              aria-invalid={!!formErrors.phone}
-              aria-describedby={formErrors.phone ? 'join-phone-error' : undefined}
-              className={cn(formErrors.phone && 'border-red-500 focus-visible:ring-red-500')}
-            />
-            {formErrors.phone && (
-              <p id="join-phone-error" className="text-xs text-red-600 mt-1">
-                {formErrors.phone}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="role">I am a</Label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="doctor">Doctor</option>
-              <option value="assistant">Assistant / Receptionist</option>
-            </select>
+              Doctor
+            </button>
+            <button
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, role: 'assistant' }))}
+              className={cn(
+                'flex-1 py-2.5 px-4 rounded-md text-sm font-medium border transition-colors',
+                formData.role === 'assistant'
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+              )}
+            >
+              Assistant
+            </button>
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={!canSubmit}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Submitting...
-              </>
-            ) : (
-              <>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Submit Registration
-              </>
-            )}
-          </Button>
-        </form>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Full Name */}
+            <div>
+              <Label htmlFor="name" className="text-sm font-medium text-gray-700">
+                Full Name
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Enter your full name"
+                aria-invalid={!!formErrors.name}
+                aria-describedby={formErrors.name ? 'join-name-error' : undefined}
+                className={cn(
+                  'mt-1 h-11',
+                  formErrors.name && 'border-red-500 focus-visible:ring-red-500'
+                )}
+              />
+              {formErrors.name && (
+                <p id="join-name-error" className="text-sm text-red-600 mt-1">
+                  {formErrors.name}
+                </p>
+              )}
+            </div>
 
-        <div className="mt-6 text-center">
-          <SignOutButton>
-            <button className="text-sm text-gray-500 hover:text-gray-700">
-              Sign out and use a different account
-            </button>
-          </SignOutButton>
+            {/* Email */}
+            <div>
+              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                Email Address
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                readOnly
+                aria-describedby="join-email-hint"
+                className="mt-1 h-11 bg-gray-50 cursor-not-allowed"
+              />
+              <p id="join-email-hint" className="text-xs text-gray-500 mt-1">
+                From your Clerk account
+              </p>
+            </div>
+
+            {/* Phone */}
+            <div>
+              <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                Phone Number <span className="text-gray-400 font-normal">(Optional)</span>
+              </Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="10-digit Indian mobile"
+                inputMode="numeric"
+                aria-invalid={!!formErrors.phone}
+                aria-describedby={formErrors.phone ? 'join-phone-error' : undefined}
+                className={cn(
+                  'mt-1 h-11',
+                  formErrors.phone && 'border-red-500 focus-visible:ring-red-500'
+                )}
+              />
+              {formErrors.phone && (
+                <p id="join-phone-error" className="text-sm text-red-600 mt-1">
+                  {formErrors.phone}
+                </p>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={!canSubmit}
+              className={cn(
+                'w-full h-11 mt-2',
+                canSubmit
+                  ? 'bg-gray-900 hover:bg-gray-800 text-white'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              )}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Submit Registration
+                </>
+              )}
+            </Button>
+          </form>
+
+          {/* Sign Out */}
+          <div className="mt-6 pt-4 border-t text-center">
+            <SignOutButton>
+              <button className="text-sm text-gray-500 hover:text-gray-700">
+                Sign out and use a different account
+              </button>
+            </SignOutButton>
+          </div>
         </div>
+
+        {/* Footer */}
+        <p className="text-center text-sm text-gray-400 mt-4">
+          Approval usually takes 1-2 business days
+        </p>
       </div>
     </div>
   )
