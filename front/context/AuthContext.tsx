@@ -13,8 +13,13 @@ interface AuthContextType {
   isBlocked: boolean
   needsRegistration: boolean
   error: string | null
+  isDemo: boolean
+  startDemo: (role: 'doctor' | 'assistant') => Promise<User>
+  exitDemo: () => void
   refetch: () => Promise<void>
 }
+
+const DEMO_FLAG = 'clinic_demo'
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -27,17 +32,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isBlocked, setIsBlocked] = useState(false)
   const [needsRegistration, setNeedsRegistration] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isDemo, setIsDemo] = useState(false)
+
+  const clearDemo = () => {
+    localStorage.removeItem(DEMO_FLAG)
+    localStorage.removeItem('clinic_token')
+    setIsDemo(false)
+  }
+
+  // Demo sessions have no Clerk user; restore them from the stored demo JWT
+  const restoreDemo = async () => {
+    const storedToken = localStorage.getItem('clinic_token')
+    if (localStorage.getItem(DEMO_FLAG) !== '1' || !storedToken) return false
+    try {
+      const response = await authApi.me(storedToken)
+      setUser(response.user)
+      setToken(storedToken)
+      setIsDemo(true)
+      return true
+    } catch {
+      clearDemo()
+      return false
+    }
+  }
 
   const verifyUser = async () => {
     if (!clerkUser) {
-      setUser(null)
-      setToken(null)
-      setIsLoading(false)
       setIsPending(false)
       setIsBlocked(false)
       setNeedsRegistration(false)
+      if (!(await restoreDemo())) {
+        setUser(null)
+        setToken(null)
+      }
+      setIsLoading(false)
       return
     }
+
+    // A real sign-in always replaces any demo session
+    if (localStorage.getItem(DEMO_FLAG) === '1') clearDemo()
 
     setIsLoading(true)
     setError(null)
@@ -94,6 +127,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token])
 
+  const startDemo = async (role: 'doctor' | 'assistant') => {
+    const response = await authApi.demo(role)
+    localStorage.setItem('clinic_token', response.token)
+    localStorage.setItem(DEMO_FLAG, '1')
+    setUser(response.user)
+    setToken(response.token)
+    setIsDemo(true)
+    setIsPending(false)
+    setIsBlocked(false)
+    setNeedsRegistration(false)
+    return response.user
+  }
+
+  // Only clear storage, then do a full page load to /demo: changing state in
+  // place would let protected pages redirect to Clerk sign-in first
+  const exitDemo = () => {
+    localStorage.removeItem(DEMO_FLAG)
+    localStorage.removeItem('clinic_token')
+    window.location.assign('/demo')
+  }
+
   const value: AuthContextType = {
     user,
     token,
@@ -103,6 +157,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isBlocked,
     needsRegistration,
     error,
+    isDemo,
+    startDemo,
+    exitDemo,
     refetch: verifyUser
   }
 

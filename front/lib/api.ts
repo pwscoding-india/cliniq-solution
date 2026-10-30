@@ -54,7 +54,16 @@ export const authApi = {
     }),
 
   me: (token: string) =>
-    request<{ success: boolean; user: User }>('/api/auth/me', { token })
+    request<{ success: boolean; user: User }>('/api/auth/me', { token }),
+
+  demo: (role: 'doctor' | 'assistant') =>
+    request<{ success: boolean; token: string; user: User }>('/api/auth/demo', {
+      method: 'POST',
+      body: { role }
+    }),
+
+  demoPatientToken: () =>
+    request<{ success: boolean; tokenId: number | null }>('/api/auth/demo/patient-token')
 }
 
 // Queues

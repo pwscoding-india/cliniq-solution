@@ -10,7 +10,9 @@
     "dev": "node index.js",
     "db:sync": "node scripts/syncDb.js",
     "db:seed": "node scripts/seed.js",
-    "vercel-build": "echo 'Build completed'"
+    "vercel-build": "echo 'Build completed'",
+    "demo:seed": "node scripts/demo.js",
+    "demo:reset": "node scripts/demo.js --reset"
   },
   "keywords": ["clinic", "queue-management", "healthcare"],
   "author": "pwscoding.co.in",

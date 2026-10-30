@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs'
 import { useAuth } from '@/context/AuthContext'
 import { Loader2, Sparkles, Zap, Play, Clock, Shield, ArrowRight, Activity } from 'lucide-react'
@@ -190,6 +191,10 @@ export default function HomePage() {
                     />
                   </DialogContent>
                 </Dialog>
+                <Link href="/demo" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1">
+                  Try the live demo
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </motion.div>
 
               {/* Feature Cards */}

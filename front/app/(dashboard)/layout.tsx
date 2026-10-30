@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { SignedIn, SignedOut, RedirectToSignIn, UserButton } from '@clerk/nextjs'
 import { useAuth } from '@/context/AuthContext'
-import { Loader2, LayoutDashboard, Users, Building2, FileText, Menu, X, UserCheck, Sparkles } from 'lucide-react'
+import { Loader2, LayoutDashboard, Users, Building2, FileText, Menu, X, UserCheck, Sparkles, LogOut, PlayCircle } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { usePathname } from 'next/navigation'
@@ -12,8 +12,22 @@ import { usePathname } from 'next/navigation'
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, isLoading, isAuthenticated, isPending, isBlocked, needsRegistration } = useAuth()
+  const { user, isLoading, isAuthenticated, isPending, isBlocked, needsRegistration, isDemo, exitDemo } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // Demo sessions have no Clerk user, so they skip the Clerk sign-in gate
+  const SignedInGate = isDemo ? Fragment : SignedIn
+
+  const exitDemoButton = (
+    <button
+      type="button"
+      onClick={exitDemo}
+      className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-semibold shadow-md shadow-indigo-500/25 hover:opacity-90 transition-opacity"
+    >
+      <LogOut className="h-4 w-4" />
+      Exit demo
+    </button>
+  )
 
   useEffect(() => {
     if (isLoading) return
@@ -60,10 +74,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-      <SignedIn>
+      {!isDemo && (
+        <SignedOut>
+          <RedirectToSignIn />
+        </SignedOut>
+      )}
+      <SignedInGate>
         {isAuthenticated ? (
           <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
             {/* Background decoration */}
@@ -129,10 +145,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
                     {/* Sign Out */}
                     <div className="mt-6 pt-4 border-t border-gray-100">
-                      <div className="flex items-center gap-3 px-2">
-                        <UserButton afterSignOutUrl="/" />
-                        <span className="text-sm text-gray-500">Sign out</span>
-                      </div>
+                      {isDemo ? (
+                        <div className="px-2">{exitDemoButton}</div>
+                      ) : (
+                        <div className="flex items-center gap-3 px-2">
+                          <UserButton afterSignOutUrl="/" />
+                          <span className="text-sm text-gray-500">Sign out</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -195,24 +215,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           {user?.role}
                         </p>
                       </div>
-                      <UserButton
-                        afterSignOutUrl="/"
-                        appearance={{
-                          elements: {
-                            avatarBox: 'h-9 w-9 ring-2 ring-white shadow-md'
-                          }
-                        }}
-                      />
+                      {isDemo ? exitDemoButton : (
+                        <UserButton
+                          afterSignOutUrl="/"
+                          appearance={{
+                            elements: {
+                              avatarBox: 'h-9 w-9 ring-2 ring-white shadow-md'
+                            }
+                          }}
+                        />
+                      )}
                     </div>
 
                     {/* Mobile User Button */}
                     <div className="sm:hidden">
-                      <UserButton afterSignOutUrl="/" />
+                      {isDemo ? exitDemoButton : <UserButton afterSignOutUrl="/" />}
                     </div>
                   </div>
                 </div>
               </div>
             </header>
+
+            {isDemo && (
+              <div className="relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-center gap-2 text-xs sm:text-sm">
+                  <PlayCircle className="h-4 w-4 shrink-0" />
+                  <span>
+                    Demo mode: you are viewing a sample clinic as the <b className="capitalize">{user?.role}</b>. Feel free to click around.
+                  </span>
+                  <button type="button" onClick={exitDemo} className="underline underline-offset-2 font-semibold ml-1 hover:opacity-80">
+                    Switch role
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Main content */}
             <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -229,7 +265,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
         )}
-      </SignedIn>
+      </SignedInGate>
     </>
   )
 }
