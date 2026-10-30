@@ -17,8 +17,6 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
-      - key: DEMO_MODE
-        value: "true"
       - key: GMAIL_NAME
         sync: false
       - key: GMAIL_USER

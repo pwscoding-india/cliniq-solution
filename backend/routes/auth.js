@@ -218,10 +218,13 @@ router.get('/me', async (req, res) => {
   }
 })
 
-// POST /api/auth/demo - One-click demo login (only when DEMO_MODE=true)
+// Public demo is on by default; set DEMO_MODE=false to turn it off
+const isDemoEnabled = () => process.env.DEMO_MODE !== 'false'
+
+// POST /api/auth/demo - One-click demo login
 // Issues a JWT for the fixed demo doctor/assistant; never for real users.
 router.post('/demo', async (req, res) => {
-  if (process.env.DEMO_MODE !== 'true') {
+  if (!isDemoEnabled()) {
     return res.status(404).json({ success: false, message: 'Demo mode is disabled', code: 'NOT_FOUND' })
   }
 
@@ -260,7 +263,7 @@ router.post('/demo', async (req, res) => {
 
 // GET /api/auth/demo/patient-token - A live token from today's demo queue (patient view)
 router.get('/demo/patient-token', async (req, res) => {
-  if (process.env.DEMO_MODE !== 'true') {
+  if (!isDemoEnabled()) {
     return res.status(404).json({ success: false, message: 'Demo mode is disabled', code: 'NOT_FOUND' })
   }
 
